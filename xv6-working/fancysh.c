@@ -64,6 +64,7 @@ char *filepathbuffer;
 int fork1(void);  // Fork but panics on failure.
 void panic(char*);
 struct cmd *parsecmd(char*);
+int parsebuiltins(char*);
 
 int file_exist(char * filename)
 {
@@ -73,7 +74,7 @@ int file_exist(char * filename)
 void concat(char *first, char *second)
 {
         int i, j;
-        for(i = 0; first[i]!='\0'; i++) ;
+        for(i = 0; first[i]!='\0'; i++);
         for(j = 0; second[j]!='\0'; j++,i++) {
                 first[i] = second[j];
         }
@@ -200,7 +201,7 @@ main(int argc, char **argv)
         int fd;
 
         if(argc > 1)
-                SHLVL = atoi(argv[1]);
+                SHLVL = atoi(&argv[1][0]);
 
         // Assumes three file descriptors open.
         while((fd = open("console", O_RDWR)) >= 0) {
@@ -211,41 +212,77 @@ main(int argc, char **argv)
         }
         // Read and run input commands.
         while(getcmd(buf, sizeof(buf)) >= 0) {
-                if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' ') {
-                        // Clumsy but will have to do for now.
-                        // Chdir has no effect on the parent if run in the child.
-                        buf[strlen(buf)-1] = 0; // chop \n
-                        if(chdir(buf+3) < 0)
-                                printf(2, "cannot cd %s\n", buf+3);
-                        else if(buf[3] != '.') {
-                                int i;
-                                for(i = 0; buf[i]!='\0'; i++) ;
-                                char *to = (char*) malloc(i-3);
-                                strcpy(to,buf+3);
-                                concat(pwd, "/");
-                                concat(pwd, to);
-                        }else if(strlen(buf) >= 5 && buf[3] == '.' && buf[4] == '.') {
-                                //remove the last
-                                int i;
-                                i = strlen(pwd);
-                                for(i = strlen(pwd)-1; pwd[i]!='/'; i--) ;
-                                pwd[i] = '\0';
 
-                        }
-                        //add or remove to the path
+                if(parsebuiltins(buf) == 0)
                         continue;
-                }
-                if(buf[0] == 'p' && buf[1] == 'w' && buf[2] == 'd') {
-                        //just print the $PWD envar
-                        printf(1, "current directory %s\n", pwd);
-                        continue;
-                }
-                //add pwd functionality
+
                 if(fork1() == 0)
                         runcmd(parsecmd(buf));
                 wait();
         }
         exit();
+}
+
+int parsebuiltins(char *buf)
+{
+        int buflength = strlen(buf);
+
+        if(buflength < 3)
+                return -1;
+
+        if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' ') {
+                // Clumsy but will have to do for now.
+                // Chdir has no effect on the parent if run in the child.
+                buf[buflength-1] = 0; // chop \n
+
+                if(chdir(buf+3) < 0) {
+                        printf(2, "cannot cd %s\n", buf+3);
+                        return 0;
+                }
+                char *next = &buf[3];
+
+                //also check for absolute path(ie. starts with "/", this should not contain and "." or "..")
+                //we could just wipe out path if we see this then continue with our operation
+
+                while(*next != '\0') {
+                        if(*next == '/') {
+                                next++;
+                                continue;
+                        }
+                        if(*next == '.') {
+                                next++;
+                                if (*next == '/') {
+                                        next++;
+                                        continue;
+                                } else if (*next == '.') {
+                                        next++;
+                                        int i;
+                                        for(i = strlen(pwd) - 1; pwd[i] != '/'; i--);
+                                        if(i > 0)
+                                                pwd[i] = '\0';
+                                }
+                        } else {
+                                int i = 0;
+                                int l = strlen(pwd);
+                                if(l > 1) {
+                                  pwd[l-1] = '/';
+                                  l++;
+                                }
+                                while(*next != '\0' && *next != '/') {
+                                        pwd[l-1] = *next;
+                                        l++;
+                                        next++;
+                                }
+                                pwd[l] = '\0';
+                        }
+                }
+                return 0;
+        }
+        if(buf[0] == 'p' && buf[1] == 'w' && buf[2] == 'd') {
+                printf(1, "current directory %s\n", pwd);
+                return 0;
+        }
+        return -1;
 }
 
 void
