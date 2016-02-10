@@ -262,7 +262,6 @@ int parsebuiltins(char *buf)
                                                 pwd[i] = '\0';
                                 }
                         } else {
-                                int i = 0;
                                 int l = strlen(pwd);
                                 if(l > 1) {
                                   pwd[l-1] = '/';
