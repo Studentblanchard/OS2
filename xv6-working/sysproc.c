@@ -95,7 +95,7 @@ sys_halt(void)
 {
   char *p = "Shutdown";
   for( ; *p; p++)
-    outb(0x8900, *p);
+    outb(0xB004, 0x2000);
   return 0;
 }
 

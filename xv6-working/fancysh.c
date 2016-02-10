@@ -203,6 +203,8 @@ main(int argc, char **argv)
         if(argc > 1)
                 SHLVL = atoi(&argv[1][0]);
 
+	printf(1, "Shell Level: %d\n", SHLVL);
+
         // Assumes three file descriptors open.
         while((fd = open("console", O_RDWR)) >= 0) {
                 if(fd >= 3) {
