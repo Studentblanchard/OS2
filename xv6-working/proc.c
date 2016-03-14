@@ -455,6 +455,8 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
+    cprintf("&%p\n", &p->pgdir);//Do i need pointer?
+    cprintf("%p\n", p->pgdir);//Do i need pointer?
     cprintf("%d %s %s", p->pid, state, p->name);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
