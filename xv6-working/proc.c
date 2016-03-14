@@ -445,6 +445,9 @@ procdump(void)
   };
   int i;
   struct proc *p;
+  pde_t *pde;
+  pte_t *pgtab, *pte;
+  uint *va;
   char *state;
   uint pc[10];
   
@@ -455,9 +458,26 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("&%p\n", &p->pgdir);//Do i need pointer?
-    cprintf("%p\n", p->pgdir);//Do i need pointer?
+    int j, k;
     cprintf("%d %s %s", p->pid, state, p->name);
+    cprintf("Page tables: \n");
+    cprintf("	Memory location of page directory = %p\n", p->pgdir); 
+    for(j = 0 ; j < 1024 ; j++){
+	pde = &(p->pgdir[j]);
+        if((uint)*pde & PTE_P){//The page directory entry is present
+	   cprintf("		pdir PTE %d, %d\n", j, (uint)(((uint)*pde >> 12 ) & 0xfffff));
+	   pgtab = (pte_t*)p2v(PTE_ADDR(*pde));
+	   cprintf("		memory location of page table = %p\n", pgtab);
+	   for(k = 0 ; k < 1024 ; k++){
+	        pte = (pte_t*)pgtab[k];
+		if((uint)pte & PTE_P & PTE_U) {
+		    va = (uint*)p2v(PTE_ADDR(*pte));
+		    cprintf("		ptbl PTE %d, %p, %p\n", k, pte, va);
+		}
+	   }
+	}
+    }
+    
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
