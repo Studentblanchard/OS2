@@ -10,6 +10,7 @@ char *argv[] = { "sh", 0 };
 int
 main(void)
 {
+  printf(1, "top of init main()\n");
   int pid, wpid;
 
   if(open("console", O_RDWR) < 0){

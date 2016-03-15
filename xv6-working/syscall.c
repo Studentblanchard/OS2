@@ -17,6 +17,7 @@
 int
 fetchint(uint addr, int *ip)
 {
+  if(addr == 0) return -1;
   if(addr >= proc->sz || addr+4 > proc->sz)
     return -1;
   *ip = *(int*)(addr);
@@ -30,7 +31,7 @@ int
 fetchstr(uint addr, char **pp)
 {
   char *s, *ep;
-
+  if(addr == 0) return -1;
   if(addr >= proc->sz)
     return -1;
   *pp = (char*)addr;
@@ -58,6 +59,8 @@ argptr(int n, char **pp, int size)
   
   if(argint(n, &i) < 0)
     return -1;
+  if((uint)i == 0) return -1; 
+
   if((uint)i >= proc->sz || (uint)i+size > proc->sz)
     return -1;
   *pp = (char*)i;

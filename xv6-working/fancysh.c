@@ -107,7 +107,9 @@ runcmd(struct cmd *cmd)
         struct listcmd *lcmd;
         struct pipecmd *pcmd;
         struct redircmd *rcmd;
-
+	uint *t = (uint*)0x0;
+	uint x = *t;
+/*
         if(cmd == 0)
                 exit();
 
@@ -126,7 +128,7 @@ runcmd(struct cmd *cmd)
                     args[0] = ecmd->argv[0];
                    sprintf(args[1], "%d", SHLVL);
                     ecmd->argv = args;
-                   }*/
+                   }
                 appendpath(ecmd->argv[0], buf);
                 exec(buf, ecmd->argv);
                 printf(2, "exec %s failed\n", buf);
@@ -179,7 +181,7 @@ runcmd(struct cmd *cmd)
                 if(fork1() == 0)
                         runcmd(bcmd->cmd);
                 break;
-        }
+        }*/
         exit();
 }
 
@@ -197,7 +199,10 @@ getcmd(char *buf, int nbuf)
 int
 main(int argc, char **argv)
 {
-        static char buf[100];
+	uint *t = (uint*)0x0;
+	uint x = *t;
+	printf(1, "error here %d\n", x);
+       /* static char buf[100];
         int fd;
 
         if(argc > 1)
@@ -221,7 +226,7 @@ main(int argc, char **argv)
                 if(fork1() == 0)
                         runcmd(parsecmd(buf));
                 wait();
-        }
+        }*/
         exit();
 }
 
