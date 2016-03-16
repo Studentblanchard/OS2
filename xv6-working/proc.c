@@ -276,6 +276,7 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -284,6 +285,7 @@ scheduler(void)
       p->state = RUNNING;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
+
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
@@ -457,21 +459,20 @@ procdump(void)
     else
       state = "???";
     int j, k;
-    cprintf("%d %s %s\n", p->pid, state, p->name);
-
+    cprintf("%d %s %s", p->pid, state, p->name);
     cprintf("Page tables: \n");
     cprintf("	Memory location of page directory = %p\n", p->pgdir); 
     for(j = 0 ; j < 1024 ; j++){
 	pde = &(p->pgdir[j]);
         if((uint)*pde & PTE_P){//The page directory entry is present
-	   cprintf("		pdir PTE %d, %d\n", j, (uint)(PTE_ADDR(*pde) >> 12));
+	   cprintf("		pdir PTE %d, %d\n", j, (uint)(((uint)*pde >> 12 ) & 0xfffff));
 	   pgtab = (pte_t*)p2v(PTE_ADDR(*pde));
 	   cprintf("		memory location of page table = %p\n", pgtab);
 	   for(k = 0 ; k < 1024 ; k++){
 	        pte = &pgtab[k];
 		if((uint)*pte & PTE_P && (uint)*pte & PTE_U) {
 		    va = (uint*)p2v(PTE_ADDR(*pte));
-		    cprintf("			ptbl PTE %d, %d, %p\n", k, (uint)(PTE_ADDR(*pte) >> 12), va);
+		    cprintf("			ptbl PTE %d, %p, %p\n", k, (uint)(PTE_ADDR(*pte) >> 12), va);
 		}
 	   }
 	}
