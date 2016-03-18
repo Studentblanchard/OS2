@@ -1,8 +1,11 @@
 #include <stdio.h>
-
-int main()
+#include <string.h>
+int
+main()
 {
-  int *p = main;
-  //*p = 1;
-  printf("%x", *p);
+  printf("%x", &main);
+  //memset(&main, 0, 10);
+  return 0;
 }
+
+
