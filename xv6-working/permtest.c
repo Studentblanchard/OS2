@@ -2,7 +2,7 @@
 
 int main()
 {
-  int *p = NULL;
+  int *p = main;
   //*p = 1;
   printf("%x", *p);
 }

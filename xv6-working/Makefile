@@ -175,6 +175,8 @@ UPROGS=\
         _fancysh\
 	_halt\
 	_big\
+	_permtest\
+	_nulltest\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
