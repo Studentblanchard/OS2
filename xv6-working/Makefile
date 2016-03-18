@@ -32,7 +32,7 @@ OBJS = \
 # TOOLPREFIX = i386-jos-elf
 
 # Using native tools (e.g., on X86 Linux)
-#TOOLPREFIX = 
+#TOOLPREFIX =
 
 # Try to infer the correct TOOLPREFIX if not set
 ifndef TOOLPREFIX
@@ -92,22 +92,22 @@ xv6memfs.img: bootblock kernelmemfs
 	dd if=kernelmemfs of=xv6memfs.img seek=1 conv=notrunc
 
 bootblock: bootasm.S bootmain.c
-	$(CC) $(CFLAGS) -fno-pic -O -nostdinc -I. -c bootmain.c
-	$(CC) $(CFLAGS) -fno-pic -nostdinc -I. -c bootasm.S
-	$(LD) $(LDFLAGS) -N -e start -Ttext 0x7C00 -o bootblock.o bootasm.o bootmain.o
+	$(CC) $(CFLAGS) -fno-pic -O -no-omagicostdinc -I. -c bootmain.c
+	$(CC) $(CFLAGS) -fno-pic -no-omagicostdinc -I. -c bootasm.S
+	$(LD) $(LDFLAGS) -no-omagic -e start -Ttext 0x7C00 -o bootblock.o bootasm.o bootmain.o
 	$(OBJDUMP) -S bootblock.o > bootblock.asm
 	$(OBJCOPY) -S -O binary -j .text bootblock.o bootblock
 	./sign.pl bootblock
 
 entryother: entryother.S
-	$(CC) $(CFLAGS) -fno-pic -nostdinc -I. -c entryother.S
-	$(LD) $(LDFLAGS) -N -e start -Ttext 0x7000 -o bootblockother.o entryother.o
+	$(CC) $(CFLAGS) -fno-pic -no-omagicostdinc -I. -c entryother.S
+	$(LD) $(LDFLAGS) -no-omagic -e start -Ttext 0x7000 -o bootblockother.o entryother.o
 	$(OBJCOPY) -S -O binary -j .text bootblockother.o entryother
 	$(OBJDUMP) -S bootblockother.o > entryother.asm
 
 initcode: initcode.S
-	$(CC) $(CFLAGS) -nostdinc -I. -c initcode.S
-	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o initcode.out initcode.o
+	$(CC) $(CFLAGS) -no-omagicostdinc -I. -c initcode.S
+	$(LD) $(LDFLAGS) -no-omagic -e start -Ttext 0 -o initcode.out initcode.o
 	$(OBJCOPY) -S -O binary initcode.out initcode
 	$(OBJDUMP) -S initcode.o > initcode.asm
 
@@ -137,14 +137,14 @@ vectors.S: vectors.pl
 ULIB = ulib.o usys.o printf.o umalloc.o
 
 _%: %.o $(ULIB)
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0x1000 -o $@ $^
+	$(LD) $(LDFLAGS) -no-omagic -e main -Ttext 0x1000 -o $@ $^
 	$(OBJDUMP) -S $@ > $*.asm
 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
 
 _forktest: forktest.o $(ULIB)
 	# forktest has less library code linked in - needs to be small
 	# in order to be able to max out the proc table.
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0x1000 -o _forktest forktest.o ulib.o usys.o
+	$(LD) $(LDFLAGS) -no-omagic -e main -Ttext 0x1000 -o _forktest forktest.o ulib.o usys.o
 	$(OBJDUMP) -S _forktest > forktest.asm
 
 mkfs: mkfs.c fs.h
@@ -175,13 +175,15 @@ UPROGS=\
         _fancysh\
 	_halt\
 	_big\
+	_permtest\
+	_nulltest\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
 
 -include *.d
 
-clean: 
+clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*.o *.d *.asm *.sym vectors.S bootblock entryother \
 	initcode initcode.out kernel xv6.img fs.img kernelmemfs mkfs \
@@ -221,8 +223,8 @@ qemu: fs.img xv6.img
 qemu-memfs: xv6memfs.img
 	$(QEMU) xv6memfs.img -smp $(CPUS) -m 256
 
-qemu-nox: fs.img xv6.img
-	$(QEMU) -nographic $(QEMUOPTS)
+qemu-no-omagicox: fs.img xv6.img
+	$(QEMU) -no-omagicographic $(QEMUOPTS)
 
 .gdbinit: .gdbinit.tmpl
 	sed "s/localhost:1234/localhost:$(GDBPORT)/" < $^ > $@
@@ -231,9 +233,9 @@ qemu-gdb: fs.img xv6.img .gdbinit
 	@echo "*** Now run 'gdb'." 1>&2
 	$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB)
 
-qemu-nox-gdb: fs.img xv6.img .gdbinit
+qemu-no-omagicox-gdb: fs.img xv6.img .gdbinit
 	@echo "*** Now run 'gdb'." 1>&2
-	$(QEMU) -nographic $(QEMUOPTS) -S $(QEMUGDB)
+	$(QEMU) -no-omagicographic $(QEMUOPTS) -S $(QEMUGDB)
 
 # CUT HERE
 # prepare dist for students

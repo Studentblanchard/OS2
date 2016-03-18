@@ -3,5 +3,6 @@
 int main()
 {
   int *p = NULL;
-  *p = 1;
+  //*p = 1;
+  printf("%x", *p);
 }
