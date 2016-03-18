@@ -35,3 +35,4 @@ Added another parameter to allocuvm - int perm -
 exec is now responsible for passing PTE_W|PTE_U or PTE_U
 exec checks the program section for the writable bit and passes it to allocuvm
 updated all other references to allocuvm
+added -no-omagic to makefile instead of -N for page alignment 
