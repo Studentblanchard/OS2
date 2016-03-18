@@ -1,38 +1,5 @@
 Student: Trevor Blanchard
 Course: Comp 4430 OS2
-Date: March 14, 2016
-Lab 4 Memory Management 
+Date: March 18, 2016
+Lab 5 More Memory Management 
 
-Part 1
-
-loop over all the pdes (1024)
-proc.c line 465 *pde = &(p->pgdir[j]);
-
-get the page table from the PPN
-proc.c line 468 pgtab = (pte_t*)p2v(PTE_ADDR(*pde));
-
-loop over all the ptes (1024)
-proc.c line 471 pte = &pgtab[k];
-
-read the address from the PPN
-proc.c line 473 va = (uint*)p2v(PTE_ADDR(*pte));
-
-Part 2
-
-Don't allow The first page to be addressed
-exec.c line 19 sz = PGSIZE - 1;
-
-skip the first page when walking
-vm.c line 317 for(i = PGSIZE; i < sz; += PGSIZE){
-
-Make the text data start at address 0x1000 for xv6 and _forktest
-README line 140 $(LD) $(LDFLAGS) -N -e main -Ttext 0x1000 -o $@ $^
-README line 147 $(LD) $(LDFLAGS) -N -e main -Ttext 0x1000 -o _forktest forktest.o ulib.o usys.o
-
-Part 3
-
-Added another parameter to allocuvm - int perm -
-exec is now responsible for passing PTE_W|PTE_U or PTE_U
-exec checks the program section for the writable bit and passes it to allocuvm
-updated all other references to allocuvm
-added -no-omagic to makefile instead of -N for page alignment 
